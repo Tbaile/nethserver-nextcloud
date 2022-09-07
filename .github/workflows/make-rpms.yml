@@ -5,7 +5,6 @@ on:
       - master
       - main
   pull_request:
-
 jobs:
   make-rpm:
     runs-on: ubuntu-latest
@@ -37,4 +36,8 @@ jobs:
           TRAVIS_PULL_REQUEST=$(echo "${{ github.ref }}" | sed -n "s/^refs\/pull\/\(.*\)\/merge$/\1/p")
           TRAVIS_REPO_SLUG="${{ github.action_repository }}"
           TRAVIS_TAG=$(echo "${{ github.ref }}" | sed -n "s/^refs\/tag\/\(.*\)$/\1/p")
-          echo "Hello $TRAVIS_PULL_REQUEST"
+          docker run --name makerpms ${EVARS} \
+            --hostname ${{ github.run_id }}-${{ github.run_number }}.nethserver.org \
+            --volume $PWD:/srv/makerpms/src:ro ${DOCKER_IMAGE} makerpms-travis -s *.spec
+          docker commit makerpms nethserver/build
+          docker run ${EVARS} -e SECRET -e SECRET_URL -e AUTOBUILD_SECRET -e AUTOBUILD_SECRET_URL nethserver/build uploadrpms-travis
