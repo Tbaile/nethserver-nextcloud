@@ -32,14 +32,14 @@ jobs:
         run: ./prep-sources
       - name: Build RPM and publish
         run: |
-          TRAVIS_BRANCH="${{ github.base_ref }}"
-          TRAVIS_BUILD_ID="${{ github.run_id }}"
-          TRAVIS_PULL_REQUEST_BRANCH="${{ github.head_ref }}"
-          TRAVIS_PULL_REQUEST=$(echo "${{ github.ref }}" | sed -n "s/^refs\/pull\/\(.*\)\/merge$/\1/p")
-          TRAVIS_REPO_SLUG="${{ github.action_repository }}"
-          TRAVIS_TAG=$(echo "${{ github.ref }}" | sed -n "s/^refs\/tag\/\(.*\)$/\1/p")
+          export TRAVIS_BRANCH="$GITHUB_BASE_REF"
+          export TRAVIS_BUILD_ID="${GITHUB_RUN_ID}"
+          export TRAVIS_PULL_REQUEST_BRANCH="${GITHUB_HEAD_REF}"
+          export TRAVIS_PULL_REQUEST=$(echo "${GITHUB_REF}" | sed -n "s/^refs\/pull\/\(.*\)\/merge$/\1/p")
+          export TRAVIS_REPO_SLUG="${GITHUB_ACTION_REPOSITORY}"
+          export TRAVIS_TAG=$(echo "${GITHUB_REF}" | sed -n "s/^refs\/tag\/\(.*\)$/\1/p")
           docker run --name makerpms ${EVARS} \
-            --hostname ${{ github.run_id }}-${{ github.run_number }}.nethserver.org \
+            --hostname ${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}.nethserver.org \
             --volume $PWD:/srv/makerpms/src:ro ${DOCKER_IMAGE} makerpms-travis -s *.spec
           docker commit makerpms nethserver/build
           docker run ${EVARS} -e SECRET -e SECRET_URL -e AUTOBUILD_SECRET -e AUTOBUILD_SECRET_URL nethserver/build uploadrpms-travis
